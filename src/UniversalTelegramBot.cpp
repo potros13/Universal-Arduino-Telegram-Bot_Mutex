@@ -593,6 +593,85 @@ bool UniversalTelegramBot::sendMessage(const String& chat_id, const String& text
   return sendPostMessage(payload.as<JsonObject>(), message_id); // if message id == 0 then edit is false, else edit is true
 }
 
+
+int UniversalTelegramBot::getBotProfilePhoto() {
+  DynamicJsonDocument payload(maxMessageLength);
+
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+
+  // la URL para obtener las fotos de un user es:
+  // https://api.telegram.org/BOT-TOKEN/getUserProfilePhotos?user_id=USER_ID
+
+  String command = BOT_CMD("getUserProfilePhotos?user_id=");
+  command += own_id;  
+
+
+  String response = sendGetToTelegram(command); // receive reply from telegram.org
+
+   if (response == "") {
+    #ifdef TELEGRAM_DEBUG
+        Serial.println(F("Received empty string in response!"));
+    #endif
+    // close the client as there's nothing to do with an empty string
+    closeClient();
+    return -1;
+  } else {
+    #ifdef TELEGRAM_DEBUG
+      Serial.print(F("incoming message length "));
+      Serial.println(response.length());
+      Serial.println(F("Creating DynamicJsonBuffer"));
+    #endif
+
+  // Parse response into Json object
+  DynamicJsonDocument doc(maxMessageLength);
+  DeserializationError error = deserializeJson(doc, ZERO_COPY(response));
+
+  if (!error) {
+      #ifdef TELEGRAM_DEBUG
+        Serial.print(F("GetUpdates parsed jsonObj: "));
+        serializeJson(doc, Serial);
+        Serial.println();
+      #endif
+      if (doc.containsKey("result")) {
+        int nFotos = doc["result"]["total_count"].as<int>();
+        Serial.println("Numero Fotos Avatar Bot = " + String(nFotos));
+        if (nFotos==0){   
+          #ifdef TELEGRAM_DEBUG
+            Serial.println(F("Tenemos que subir la foto"));
+          #endif                                
+        } else {
+          #ifdef TELEGRAM_DEBUG
+            Serial.println(F("No hay foto"));
+          #endif
+        }
+        return nFotos;
+      } else {
+        #ifdef TELEGRAM_DEBUG
+            Serial.println(F("Response contained no 'result'"));
+        #endif
+      }
+    } else { // Parsing failed
+      if (response.length() < 2) { // Too short a message. Maybe a connection issue
+        #ifdef TELEGRAM_DEBUG
+            Serial.println(F("Parsing error: Message too short"));
+        #endif
+      } else {
+        // Buffer may not be big enough, increase buffer or reduce max number of
+        // messages
+        #ifdef TELEGRAM_DEBUG
+            Serial.print(F("Failed to parse update, the message could be too "
+                           "big for the buffer. Error code: "));
+            Serial.println(error.c_str()); // debug print of parsing error
+        #endif     
+      }
+    }
+    // Close the client as no response is to be given
+    closeClient();
+    return -1;
+  }
+}
+
+
 bool UniversalTelegramBot::sendMessageWithReplyKeyboard(
     const String& chat_id, const String& text, const String& parse_mode, const String& keyboard,
     bool resize, bool oneTime, bool selective) {
