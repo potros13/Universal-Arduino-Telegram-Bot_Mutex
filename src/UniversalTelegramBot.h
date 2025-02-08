@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #include <ArduinoJson.h>
 #include <Client.h>
 #include <TelegramCertificate.h>
+#include <mutex>  // Añadir la librería mutex
 
 #define TELEGRAM_HOST "api.telegram.org"
 #define TELEGRAM_SSL_PORT 443
@@ -135,6 +136,7 @@ private:
   void closeClient();
   bool getFile(String& file_path, long& file_size, const String& file_id);
   bool processResult(JsonObject result, int messageIndex);
+  std::mutex botMutex;  // Añadir un mutex interno
 };
 
 #endif
