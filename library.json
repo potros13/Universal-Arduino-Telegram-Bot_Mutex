@@ -1,5 +1,5 @@
 {
-  "name":"UniversalTelegramBot",
+  "name":"UniversalTelegramBot_Mutex",
   "description":"Arduino Telegram Bot library for multiple different architectures.",
   "keywords":"Communication,Telegram,Arduino",
   "authors":
@@ -10,9 +10,9 @@
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot"
+    "url": "https://github.com/potros13/Universal-Arduino-Telegram-Bot_Mutex"
   },
-  "version": "1.3.0",
+  "version": "1.3.1",
   "license": "MIT",
   "frameworks": "arduino",
   "platforms": "*",
