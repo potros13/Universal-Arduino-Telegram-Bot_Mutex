@@ -124,6 +124,7 @@ public:
   long last_message_received;
   String name;
   String userName;
+  String own_id;
   int longPoll = 0;
   unsigned int waitForResponse = 1500;
   int _lastError;
