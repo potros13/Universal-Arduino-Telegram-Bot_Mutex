@@ -63,6 +63,8 @@ String UniversalTelegramBot::buildCommand(const String& cmd) {
 }
 
 String UniversalTelegramBot::sendGetToTelegram(const String& command) {
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   String body, headers;
   
   // Connect with api.telegram.org if not already connected
@@ -97,6 +99,8 @@ String UniversalTelegramBot::sendGetToTelegram(const String& command) {
 }
 
 bool UniversalTelegramBot::readHTTPAnswer(String &body, String &headers) {
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   int ch_count = 0;
   unsigned long now = millis();
   bool finishedHeaders = false;
@@ -139,6 +143,8 @@ bool UniversalTelegramBot::readHTTPAnswer(String &body, String &headers) {
 
 String UniversalTelegramBot::sendPostToTelegram(const String& command, JsonObject payload) {
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   String body;
   String headers;
 
@@ -192,6 +198,8 @@ String UniversalTelegramBot::sendMultipartFormDataToTelegram(
     GetNextBuffer getNextBufferCallback,
     GetNextBufferLen getNextBufferLenCallback) {
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   String body;
   String headers;
   
@@ -301,6 +309,8 @@ String UniversalTelegramBot::sendMultipartFormDataToTelegram(
 
 
 bool UniversalTelegramBot::getMe() {
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   String response = sendGetToTelegram(BOT_CMD("getMe")); // receive reply from telegram.org
   DynamicJsonDocument doc(maxMessageLength);
   DeserializationError error = deserializeJson(doc, ZERO_COPY(response));
@@ -324,6 +334,8 @@ bool UniversalTelegramBot::getMe() {
  * Returns true, if the command list was updated successfully                    *
  ********************************************************************************/
 bool UniversalTelegramBot::setMyCommands(const String& commandArray) {
+  std::lock_guard<std::mutex> lock(botMutex);
+   
   DynamicJsonDocument payload(maxMessageLength);
   payload["commands"] = serialized(commandArray);
   bool sent = false;
@@ -353,6 +365,7 @@ bool UniversalTelegramBot::setMyCommands(const String& commandArray) {
  * Returns the number of new messages                          *
  ***************************************************************/
 int UniversalTelegramBot::getUpdates(long offset) {
+   std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
 
   #ifdef TELEGRAM_DEBUG  
     Serial.println(F("GET Update Messages"));
@@ -436,6 +449,8 @@ int UniversalTelegramBot::getUpdates(long offset) {
 }
 
 bool UniversalTelegramBot::processResult(JsonObject result, int messageIndex) {
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   long update_id = result["update_id"];
   // Check have we already dealt with this message (this shouldn't happen!)
   if (last_message_received != update_id) {
@@ -532,7 +547,9 @@ bool UniversalTelegramBot::processResult(JsonObject result, int messageIndex) {
  ***********************************************************************/
 bool UniversalTelegramBot::sendSimpleMessage(const String& chat_id, const String& text,
                                              const String& parse_mode) {
-
+   
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   bool sent = false;
   #ifdef TELEGRAM_DEBUG  
     Serial.println(F("sendSimpleMessage: SEND Simple Message"));
@@ -562,6 +579,7 @@ bool UniversalTelegramBot::sendSimpleMessage(const String& chat_id, const String
 bool UniversalTelegramBot::sendMessage(const String& chat_id, const String& text,
                                        const String& parse_mode, int message_id) { // added message_id
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
   DynamicJsonDocument payload(maxMessageLength);
   payload["chat_id"] = chat_id;
   payload["text"] = text;
@@ -578,7 +596,8 @@ bool UniversalTelegramBot::sendMessage(const String& chat_id, const String& text
 bool UniversalTelegramBot::sendMessageWithReplyKeyboard(
     const String& chat_id, const String& text, const String& parse_mode, const String& keyboard,
     bool resize, bool oneTime, bool selective) {
-    
+
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
   DynamicJsonDocument payload(maxMessageLength);
   payload["chat_id"] = chat_id;
   payload["text"] = text;
@@ -610,6 +629,8 @@ bool UniversalTelegramBot::sendMessageWithInlineKeyboard(const String& chat_id,
                                                          const String& keyboard,
                                                          int message_id) {   // added message_id
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   DynamicJsonDocument payload(maxMessageLength);
   payload["chat_id"] = chat_id;
   payload["text"] = text;
@@ -631,6 +652,8 @@ bool UniversalTelegramBot::sendMessageWithInlineKeyboard(const String& chat_id,
  ***********************************************************************/
 bool UniversalTelegramBot::sendPostMessage(JsonObject payload, bool edit) { // added message_id
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   bool sent = false;
   #ifdef TELEGRAM_DEBUG 
     Serial.print(F("sendPostMessage: SEND Post Message: "));
@@ -656,6 +679,8 @@ bool UniversalTelegramBot::sendPostMessage(JsonObject payload, bool edit) { // a
 
 String UniversalTelegramBot::sendPostPhoto(JsonObject payload) {
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   bool sent = false;
   String response = "";
   #ifdef TELEGRAM_DEBUG  
@@ -684,6 +709,8 @@ String UniversalTelegramBot::sendPhotoByBinary(
     MoreDataAvailable moreDataAvailableCallback,
     GetNextByte getNextByteCallback, GetNextBuffer getNextBufferCallback, GetNextBufferLen getNextBufferLenCallback) {
 
+   std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   #ifdef TELEGRAM_DEBUG  
     Serial.println(F("sendPhotoByBinary: SEND Photo"));
   #endif
@@ -705,6 +732,8 @@ String UniversalTelegramBot::sendPhoto(const String& chat_id, const String& phot
                                        int reply_to_message_id,
                                        const String& keyboard) {
 
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   DynamicJsonDocument payload(maxMessageLength);
   payload["chat_id"] = chat_id;
   payload["photo"] = photo;
@@ -739,7 +768,9 @@ bool UniversalTelegramBot::checkForOkResponse(const String& response) {
 }
 
 bool UniversalTelegramBot::sendChatAction(const String& chat_id, const String& text) {
-
+  
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   bool sent = false;
   #ifdef TELEGRAM_DEBUG  
     Serial.println(F("SEND Chat Action Message"));
@@ -770,6 +801,9 @@ bool UniversalTelegramBot::sendChatAction(const String& chat_id, const String& t
 }
 
 void UniversalTelegramBot::closeClient() {
+
+   std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   if (client->connected()) {
     #ifdef TELEGRAM_DEBUG  
         Serial.println(F("Closing client"));
@@ -780,6 +814,9 @@ void UniversalTelegramBot::closeClient() {
 
 bool UniversalTelegramBot::getFile(String& file_path, long& file_size, const String& file_id)
 {
+
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
+   
   String command = BOT_CMD("getFile?file_id=");
   command += file_id;
   String response = sendGetToTelegram(command); // receive reply from telegram.org
@@ -800,6 +837,8 @@ bool UniversalTelegramBot::getFile(String& file_path, long& file_size, const Str
 
 bool UniversalTelegramBot::answerCallbackQuery(const String &query_id, const String &text, bool show_alert, const String &url, int cache_time) {
   DynamicJsonDocument payload(maxMessageLength);
+
+  std::lock_guard<std::mutex> lock(botMutex);  // Proteger la operación
 
   payload["callback_query_id"] = query_id;
   payload["show_alert"] = show_alert;
